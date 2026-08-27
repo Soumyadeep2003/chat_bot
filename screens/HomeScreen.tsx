@@ -1,22 +1,61 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import React, { useState } from "react";
+import { FlatList, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import CustomAppBar from "../components/CustomAppBar";
+
+type chatType = {
+  role: string,
+  parts: { text: string }[]
+}
+
 
 export default function HomeScreen() {
+  const [chatHistory, setChatHistory] = useState<chatType[]>([
+    {
+      role: "model",
+      parts: [{ text: "Hello, I am Gemini, your personal assistant." }],
+    },
+  ]);
+
+  const renderItem = ( item:chatType ) => {
+    return (
+
+    );
+  };
+
   return (
-    <SafeAreaView>
-      <View>
-        <Text>Open up App.tsx to start working on your app!</Text>
-        <StatusBar style="auto" />
+    <View style={styles.mainWrapper}>
+      <SafeAreaView edges={["top"]} style={styles.headerSafeArea}>
+        <CustomAppBar />
+      </SafeAreaView>
+
+      <View style={styles.contentContainer}>
+        <StatusBar style="light" />
+        <FlatList
+          data={chatHistory}
+          renderItem={({item})=>renderItem(item)}>
+
+        </FlatList>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
-const style = StyleSheet.create({
-  container: {
+const styles = StyleSheet.create({
+  mainWrapper: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: "white",
+  },
+  headerSafeArea: {
+    backgroundColor: "#2d8ae7",
+  },
+  contentContainer: {
+    flex: 1,
+    padding: 10,
+    paddingTop:0,
+    // justifyContent: "center",
+    // alignItems: "center",
+    backgroundColor: "white",
   },
 });
