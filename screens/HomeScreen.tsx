@@ -9,7 +9,7 @@ type chatType = {
   parts: { text: string }[]
 }
 
-
+//Test commit
 export default function HomeScreen() {
   const [chatHistory, setChatHistory] = useState<chatType[]>([
     {
