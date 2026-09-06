@@ -1,16 +1,21 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   FlatList,
+  KeyboardAvoidingView,
+  Platform,
   StatusBar,
   StyleSheet,
-  Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CustomAppBar from "../components/CustomAppBar";
-import { Color } from "react-native/types_generated/Libraries/Animated/AnimatedExports";
 import ChatItem from "../components/ChatItem";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import useApiService from "../api/apiService";
 
 type chatType = {
   role: string;
@@ -18,6 +23,7 @@ type chatType = {
 };
 
 export default function HomeScreen() {
+  const { configureModel, sendMessage, streamMessage } = useApiService();
   const [chatHistory, setChatHistory] = useState<chatType[]>([
     {
       role: "model",
@@ -26,9 +32,84 @@ export default function HomeScreen() {
   ]);
   const [messages, setMessages] = useState<string>("");
 
+  useEffect(() => {
+    configureModel(
+      "You are the most efficient personal assistant to a person that has ever been",
+    );
+  }, []);
+
   const renderItem = (item: chatType) => {
+    if (item.role === "model" && item.parts[0].text === "") {
+      return (
+        <View style={styles.loadingBubble}>
+          <ActivityIndicator size="small" color="#2d8ae7" />
+        </View>
+      );
+    }
+
+    // Otherwise, render the normal chat bubble
     return <ChatItem chat={item.parts[0].text} role={item.role} />;
   };
+
+  const handleSendMessage = async () => {
+    if (!messages.trim()) return;
+
+    const newChat: chatType = {
+      role: "user",
+      parts: [{ text: messages }],
+    };
+
+    const aiText: chatType = {
+      role: "model",
+      parts: [{ text: "" }],
+    };
+
+    const requestBody = [newChat, ...chatHistory];
+
+    const updatedHistory = [aiText, newChat, ...chatHistory];
+
+    setMessages("");
+    setChatHistory(updatedHistory);
+
+    const apiHistory = [...requestBody].reverse();
+
+    await streamMessage({ contents: apiHistory }, onUpdate, onFailure);
+  };
+
+  const onUpdate = (response: string) => {
+    setChatHistory((prevHistory) => {
+      const updated = [...prevHistory];
+      updated[0] = {
+        role: "model",
+        parts: [{ text: response }],
+      };
+      return updated;
+    });
+  };
+
+  const onSuccess = (response: string) => {
+    const responseChat: chatType = {
+      role: "model",
+      parts: [{ text: response }],
+    };
+
+    setChatHistory((prevHistory) => [responseChat, ...prevHistory]);
+  };
+
+const onFailure = (errorMessage: string) => {
+  Alert.alert("An error occurred", errorMessage);
+
+  setChatHistory((prevHistory) => {
+    const updated = [...prevHistory];
+
+    updated[0] = {
+      role: "model",
+      parts: [{ text: `Error: ${errorMessage}` }],
+    };
+
+    return updated;
+  });
+};
 
   return (
     <View style={styles.mainWrapper}>
@@ -36,28 +117,44 @@ export default function HomeScreen() {
         <CustomAppBar />
       </SafeAreaView>
 
-      <View style={styles.contentContainer}>
-        <StatusBar hidden={true} />
-        <FlatList
-          data={chatHistory}
-          renderItem={({ item }) => renderItem(item)}
-          style={styles.chatList}
-          inverted={true}
-        ></FlatList>
-        <View style={styles.messageInput}>
-          <TextInput
-            value={messages}
-            onChangeText={(text) => {
-              setMessages(text);
-            }}
-            returnKeyType="next"
-            placeholder="Enter your message here"
-            placeholderTextColor="#636060"
-            multiline={true}
-            style={styles.messageTextInput}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View style={styles.contentContainer}>
+          <StatusBar hidden={true} />
+          <FlatList
+            data={chatHistory}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) => renderItem(item)}
+            style={styles.chatList}
+            inverted={true}
           />
+          <View style={styles.messageInput}>
+            <TextInput
+              value={messages}
+              onChangeText={(text) => {
+                setMessages(text);
+              }}
+              returnKeyType="next"
+              placeholder="Enter your message here"
+              placeholderTextColor="#636060"
+              multiline={true}
+              style={styles.messageTextInput}
+            />
+            <TouchableOpacity
+              onPress={handleSendMessage}
+              style={styles.sendButton}
+            >
+              <MaterialCommunityIcons
+                name="send-circle"
+                size={40}
+                color="#2d8ae7"
+              />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </View>
   );
 }
@@ -74,20 +171,36 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
     paddingTop: 0,
-    // justifyContent: "center",
-    // alignItems: "center",
     backgroundColor: "white",
   },
-  chatList: {},
+  chatList: {
+    flex: 1,
+  },
   messageInput: {
     marginBottom: 20,
+    marginTop: 20,
+    flexDirection: "row",
+    alignItems: "center",
   },
   messageTextInput: {
     backgroundColor: "#c0e3e2",
     borderRadius: 15,
     borderColor: "#203843",
-    borderCurve: "circular",
     borderWidth: 1,
     padding: 12,
+    flex: 1,
+  },
+  sendButton: {
+    marginHorizontal: 10,
+    justifyContent: "center",
+  },
+  loadingBubble: {
+    backgroundColor: "#F1F1F1",
+    alignSelf: "flex-start",
+    padding: 16,
+    borderRadius: 16,
+    borderBottomLeftRadius: 4,
+    marginVertical: 4,
+    marginLeft: 10,
   },
 });
