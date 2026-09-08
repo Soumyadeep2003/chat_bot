@@ -8,6 +8,7 @@ import { useRef } from "react";
 export default function useApiService() {
   const genAi = new GoogleGenerativeAI(process.env.EXPO_PUBLIC_GEMINI_API_KEY);
   const model = useRef<GenerativeModel | null>(null);
+  const embeddingModel = useRef<GenerativeModel | null>(null);
 
   const configureModel = (
     msg: string,
@@ -26,6 +27,9 @@ export default function useApiService() {
         topK: topK,
         topP: topP,
       },
+    });
+    embeddingModel.current = genAi.getGenerativeModel({
+      model: "text-embedding-001",
     });
   };
 
@@ -82,5 +86,9 @@ export default function useApiService() {
       onFailure(`Error occurred : ${error}`);
     }
   };
-  return { configureModel, reconfigureModel, sendMessage,streamMessage };
+
+  const getVectorCoordinates = async(text:string)=>{
+
+  };
+  return { configureModel, reconfigureModel, sendMessage, streamMessage,getVectorCoordinates };
 }

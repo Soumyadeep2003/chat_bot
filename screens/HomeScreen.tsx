@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import CustomAppBar from "../components/CustomAppBar";
 import ChatItem from "../components/ChatItem";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
@@ -32,6 +32,8 @@ export default function HomeScreen() {
   ]);
   const [messages, setMessages] = useState<string>("");
 
+  const insets = useSafeAreaInsets();
+
   useEffect(() => {
     configureModel(
       "You are the most efficient personal assistant to a person that has ever been",
@@ -47,7 +49,6 @@ export default function HomeScreen() {
       );
     }
 
-    // Otherwise, render the normal chat bubble
     return <ChatItem chat={item.parts[0].text} role={item.role} />;
   };
 
@@ -96,33 +97,38 @@ export default function HomeScreen() {
     setChatHistory((prevHistory) => [responseChat, ...prevHistory]);
   };
 
-const onFailure = (errorMessage: string) => {
-  Alert.alert("An error occurred", errorMessage);
+  const onFailure = (errorMessage: string) => {
+    Alert.alert("An error occurred", errorMessage);
 
-  setChatHistory((prevHistory) => {
-    const updated = [...prevHistory];
+    setChatHistory((prevHistory) => {
+      const updated = [...prevHistory];
 
-    updated[0] = {
-      role: "model",
-      parts: [{ text: `Error: ${errorMessage}` }],
-    };
+      updated[0] = {
+        role: "model",
+        parts: [{ text: `Error: ${errorMessage}` }],
+      };
 
-    return updated;
-  });
-};
-
+      return updated;
+    });
+  };
   return (
     <View style={styles.mainWrapper}>
-      <SafeAreaView edges={["top"]} style={styles.headerSafeArea}>
+      <View style={[styles.headerSafeArea, { paddingTop: insets.top }]}>
+        <StatusBar
+          hidden={false}
+          barStyle="light-content"
+          backgroundColor="#2d8ae7"
+        />
         <CustomAppBar />
-      </SafeAreaView>
+      </View>
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View style={styles.contentContainer}>
-          <StatusBar hidden={true} />
+        <View
+          style={[styles.contentContainer, { paddingBottom: insets.bottom }]}
+        >
           <FlatList
             data={chatHistory}
             keyExtractor={(item, index) => index.toString()}
@@ -130,12 +136,16 @@ const onFailure = (errorMessage: string) => {
             style={styles.chatList}
             inverted={true}
           />
-          <View style={styles.messageInput}>
+
+          <View
+            style={[
+              styles.messageInput,
+              { marginBottom: insets.bottom > 0 ? 10 : 20 },
+            ]}
+          >
             <TextInput
               value={messages}
-              onChangeText={(text) => {
-                setMessages(text);
-              }}
+              onChangeText={setMessages}
               returnKeyType="next"
               placeholder="Enter your message here"
               placeholderTextColor="#636060"
