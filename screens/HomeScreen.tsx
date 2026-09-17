@@ -16,6 +16,7 @@ import CustomAppBar from "../components/CustomAppBar";
 import ChatItem from "../components/ChatItem";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import useApiService from "../api/apiService";
+import Feather from "@expo/vector-icons/Feather";
 
 type chatType = {
   role: string;
@@ -97,6 +98,10 @@ export default function HomeScreen() {
     setChatHistory((prevHistory) => [responseChat, ...prevHistory]);
   };
 
+  const onFileUploadPress=()=>{
+    
+  };
+
   const onFailure = (errorMessage: string) => {
     Alert.alert("An error occurred", errorMessage);
 
@@ -143,6 +148,10 @@ export default function HomeScreen() {
               { marginBottom: insets.bottom > 0 ? 10 : 20 },
             ]}
           >
+            <TouchableOpacity style={styles.fileUploadBtn} onPress={onFileUploadPress}>
+              <Feather name="file-plus" size={30} color="#2d8ae7" />
+            </TouchableOpacity>
+
             <TextInput
               value={messages}
               onChangeText={setMessages}
@@ -212,5 +221,9 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 4,
     marginVertical: 4,
     marginLeft: 10,
+  },
+  fileUploadBtn:{
+    marginHorizontal: 10,
+    justifyContent: "center",
   },
 });

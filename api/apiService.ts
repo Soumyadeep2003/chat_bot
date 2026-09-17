@@ -4,9 +4,10 @@ import {
   GoogleGenerativeAI,
 } from "@google/generative-ai";
 import { useRef } from "react";
+import { Alert } from "react-native";
 
 export default function useApiService() {
-  const genAi = new GoogleGenerativeAI(process.env.EXPO_PUBLIC_GEMINI_API_KEY);
+  const genAi = new GoogleGenerativeAI(process.env.EXPO_PUBLIC_GEMINI_API_KEY as string);
   const model = useRef<GenerativeModel | null>(null);
   const embeddingModel = useRef<GenerativeModel | null>(null);
 
@@ -20,7 +21,7 @@ export default function useApiService() {
       return;
     }
     model.current = genAi.getGenerativeModel({
-      model: "gemini-3.6-flash",
+      model: "gemini-1.5-flash", 
       systemInstruction: msg,
       generationConfig: {
         temperature: temp,
@@ -29,7 +30,7 @@ export default function useApiService() {
       },
     });
     embeddingModel.current = genAi.getGenerativeModel({
-      model: "text-embedding-001",
+      model: "text-embedding-004",
     });
   };
 
@@ -40,7 +41,7 @@ export default function useApiService() {
     topP: number = 0.9,
   ) => {
     model.current = genAi.getGenerativeModel({
-      model: "gemini-2.5-flash",
+      model: "gemini-1.5-flash", 
       systemInstruction: msg,
       generationConfig: {
         temperature: temp,
@@ -49,6 +50,7 @@ export default function useApiService() {
       },
     });
   };
+
   const streamMessage = async (
     requestBody: GenerateContentRequest,
     onUpdate: (response: string) => void,
@@ -87,8 +89,24 @@ export default function useApiService() {
     }
   };
 
-  const getVectorCoordinates = async(text:string)=>{
-
+  const getVectorCoordinates = async (text: string) => {
+    try {
+      if (!embeddingModel.current) {
+        Alert.alert("Error", "Error: The AI model is not configured yet.");
+        return;
+      }
+      const response = await embeddingModel.current?.embedContent(text);
+      return response.embedding.values;
+    } catch (error) {
+      Alert.alert("Error", `Error occured : ${error}`);
+    }
   };
-  return { configureModel, reconfigureModel, sendMessage, streamMessage,getVectorCoordinates };
+
+  return {
+    configureModel,
+    reconfigureModel,
+    sendMessage,
+    streamMessage,
+    getVectorCoordinates,
+  };
 }
