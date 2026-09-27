@@ -1,56 +1,57 @@
-# Welcome to your Expo app 👋
+# React Native RAG Chatbot
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A local-first Retrieval-Augmented Generation (RAG) chat application built with React Native. This app processes uploaded documents, computes vector embeddings, and queries Google's Gemini models to provide context-aware answers directly from your files.
 
-## Get started
+## Features
 
-1. Install dependencies
+* **Retrieval-Augmented Generation (RAG):** Upload documents (like the Apollo spaceflight history) and ask specific, factual questions based on the text.
+* **Seamless Context Switching:** The app recognizes when a query falls outside the scope of the uploaded document and seamlessly falls back on general LLM knowledge.
+* **Local Vector Storage:** Uses `react-native-mmkv` to store and query vector coordinates directly on the device for fast retrieval.
+* **Mathematical Semantic Search:** Computes Cosine Similarity (cos θ) to match user queries with the most relevant document chunks based on semantic proximity.
 
+## Tech Stack
+
+* **Framework:** React Native / Expo
+* **LLM:** Google Gemini (`gemini-3.6-flash`)
+* **Embeddings:** Google Gemini (`gemini-embedding-2-preview`)
+* **Storage:** `react-native-mmkv`
+* **Native Modules:** `react-native-nitro-modules`
+
+## How It Works
+
+1. **Vector Embeddings:** Document text is broken into manageable chunks and passed through the `gemini-embedding-2-preview` model. This translates human language into arrays of numbers, plotting them as exact coordinates in a high-dimensional mathematical space.
+2. **Cosine Similarity (cos θ):** When a user asks a question, the prompt is converted into a vector. The app calculates the Cosine Similarity between the query vector and the stored document vectors. By dividing the dot product by the magnitudes of the vectors, it measures the exact angle (cos θ) between them.
+3. **Context Generation:** Text chunks that meet the 0.6 similarity threshold are pulled from local storage and fed to `gemini-3.6-flash` to generate a precise, context-aware response.
+
+## Prerequisites
+
+Because this project relies on custom C++ native databases and modules (`react-native-mmkv` and `react-native-nitro-modules`), it **cannot** be run in the standard Expo Go sandbox. You must compile the native iOS or Android code.
+
+* macOS with Xcode 16+ (for iOS development)
+* CocoaPods
+* Node.js
+
+## Installation & Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/Soumyadeep2003/chat_bot.git](https://github.com/Soumyadeep2003/chat_bot.git)
+   cd chat_bot
+   ```
+
+2. **Install dependencies:**
    ```bash
    npm install
    ```
 
-2. Start the app
-
-   ```bash
-   npx expo start
+3. **Configure Environment Variables:**
+   Create a `.env` file in the root directory and add your Google Gemini API key. Ensure this file is added to your `.gitignore`.
+   ```env
+   EXPO_PUBLIC_GEMINI_API_KEY=your_api_key_here
    ```
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-### Other setup steps
-
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+4. **Build and Run:**
+   Bypass Expo Go and compile the custom native app directly to your simulator:
+   ```bash
+   npx expo run:ios
+   ```
