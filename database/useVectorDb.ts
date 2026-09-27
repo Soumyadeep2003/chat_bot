@@ -76,3 +76,9 @@ export default function useVectorDb() {
 
   return { addChunksToDb, searchFromDb, getAllDocuments };
 }
+
+// Based on the text, what happened to Apollo 13, and who were the astronauts on board?"
+
+//How do I create a custom hook in React Native to fetch data from an API?
+
+//What were the three distinct components of the Apollo spacecraft, and what were their specific functions?

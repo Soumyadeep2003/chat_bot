@@ -3,25 +3,27 @@ import {
   GenerativeModel,
   GoogleGenerativeAI,
 } from "@google/generative-ai";
-import { useRef } from "react";
 import { Alert } from "react-native";
 
-export default function useApiService() {
-  const genAi = new GoogleGenerativeAI(process.env.EXPO_PUBLIC_GEMINI_API_KEY as string);
-  const model = useRef<GenerativeModel | null>(null);
-  const embeddingModel = useRef<GenerativeModel | null>(null);
+const genAi = new GoogleGenerativeAI(
+  process.env.EXPO_PUBLIC_GEMINI_API_KEY as string,
+);
+let globalModel: GenerativeModel | null = null;
+let globalEmbeddingModel: GenerativeModel | null = null;
 
+export default function useApiService() {
   const configureModel = (
     msg: string,
     temp: number = 0.7,
     topK: number = 40,
     topP: number = 0.9,
   ) => {
-    if (model.current != null) {
+    if (globalModel != null) {
       return;
     }
-    model.current = genAi.getGenerativeModel({
-      model: "gemini-1.5-flash", 
+
+    globalModel = genAi.getGenerativeModel({
+      model: "gemini-3.6-flash",
       systemInstruction: msg,
       generationConfig: {
         temperature: temp,
@@ -29,8 +31,9 @@ export default function useApiService() {
         topP: topP,
       },
     });
-    embeddingModel.current = genAi.getGenerativeModel({
-      model: "text-embedding-004",
+
+    globalEmbeddingModel = genAi.getGenerativeModel({
+      model: "gemini-embedding-2-preview",
     });
   };
 
@@ -40,8 +43,8 @@ export default function useApiService() {
     topK: number = 40,
     topP: number = 0.9,
   ) => {
-    model.current = genAi.getGenerativeModel({
-      model: "gemini-1.5-flash", 
+    globalModel = genAi.getGenerativeModel({
+      model: "gemini-3.6-flash",
       systemInstruction: msg,
       generationConfig: {
         temperature: temp,
@@ -57,11 +60,11 @@ export default function useApiService() {
     onFailure: (errorMsg: string) => void,
   ) => {
     try {
-      if (!model.current) {
+      if (!globalModel) {
         onFailure("Error: The AI model is not configured yet.");
         return;
       }
-      const response = await model.current?.generateContentStream(requestBody);
+      const response = await globalModel.generateContentStream(requestBody);
       let resultText = "";
       for await (const chunk of response.stream) {
         resultText += chunk.text();
@@ -78,11 +81,11 @@ export default function useApiService() {
     onFailure: (errorMsg: string) => void,
   ) => {
     try {
-      if (!model.current) {
+      if (!globalModel) {
         onFailure("Error: The AI model is not configured yet.");
         return;
       }
-      const response = await model.current?.generateContent(requestBody);
+      const response = await globalModel.generateContent(requestBody);
       onSuccess(response?.response.text());
     } catch (error) {
       onFailure(`Error occurred : ${error}`);
@@ -91,11 +94,11 @@ export default function useApiService() {
 
   const getVectorCoordinates = async (text: string) => {
     try {
-      if (!embeddingModel.current) {
+      if (!globalEmbeddingModel) {
         Alert.alert("Error", "Error: The AI model is not configured yet.");
         return;
       }
-      const response = await embeddingModel.current?.embedContent(text);
+      const response = await globalEmbeddingModel.embedContent(text);
       return response.embedding.values;
     } catch (error) {
       Alert.alert("Error", `Error occured : ${error}`);

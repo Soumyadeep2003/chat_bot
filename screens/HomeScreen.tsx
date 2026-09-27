@@ -1,4 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
+import Feather from "@expo/vector-icons/Feather";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import * as DocumentPicker from "expo-document-picker";
+import * as FileSystem from "expo-file-system/legacy";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -12,14 +16,10 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import CustomAppBar from "../components/CustomAppBar";
-import ChatItem from "../components/ChatItem";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import Feather from "@expo/vector-icons/Feather";
-import * as DocumentPicker from "expo-document-picker";
-import * as FileSystem from "expo-file-system";
 import useApiService from "../api/apiService";
-import useVectorDb from "../database/useVectorDb"; 
+import ChatItem from "../components/ChatItem";
+import CustomAppBar from "../components/CustomAppBar";
+import useVectorDb from "../database/useVectorDb";
 
 type chatType = {
   role: string;
@@ -28,7 +28,7 @@ type chatType = {
 
 export default function HomeScreen() {
   const { configureModel, streamMessage } = useApiService();
-  const { addChunksToDb, searchFromDb } = useVectorDb(); 
+  const { addChunksToDb, searchFromDb } = useVectorDb();
   const [chatHistory, setChatHistory] = useState<chatType[]>([
     {
       role: "model",
@@ -38,7 +38,7 @@ export default function HomeScreen() {
   const [messages, setMessages] = useState<string>("");
 
   const [isProcessingFile, setIsProcessingFile] = useState<boolean>(false);
-  const [isFileAttached, setIsFileAttached] = useState<boolean>(false); 
+  const [isFileAttached, setIsFileAttached] = useState<boolean>(false);
 
   const insets = useSafeAreaInsets();
   const fileTextContent = useRef<string>("");
@@ -154,7 +154,7 @@ export default function HomeScreen() {
 
   const onFileUploadPress = async () => {
     try {
-      console.log("Opening file picker..."); 
+      console.log("Opening file picker...");
 
       const pickerResult = await DocumentPicker.getDocumentAsync({
         type: "*/*",
@@ -162,7 +162,7 @@ export default function HomeScreen() {
         copyToCacheDirectory: true,
       });
 
-      console.log("Picker result:", pickerResult); 
+      console.log("Picker result:", pickerResult);
 
       if (pickerResult.canceled) {
         console.log("Picker was canceled or instantly aborted.");
